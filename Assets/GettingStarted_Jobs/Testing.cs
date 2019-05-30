@@ -168,7 +168,7 @@ public struct ReallyToughParallelJob : IJobParallelFor {
 public struct ReallyToughParallelJobTransforms : IJobParallelForTransform {
     
     public NativeArray<float> moveYArray;
-    [ReadOnly] public float deltaTime;
+    [ReadOnly] public float deltaTime; // 
 
     public void Execute(int index, TransformAccess transform) {
         transform.position += new Vector3(0, moveYArray[index] * deltaTime, 0f);
