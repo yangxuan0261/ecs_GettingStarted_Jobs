@@ -44,6 +44,7 @@ public class Testing : MonoBehaviour {
     private void Update() {
         float startTime = Time.realtimeSinceStartup;
         if (useJobs) {
+            // 1. 根据需要 计算的属性 的总量生成一个 线程保护的数组, 把属性填充进去
             //NativeArray<float3> positionArray = new NativeArray<float3>(zombieList.Count, Allocator.TempJob);
             NativeArray<float> moveYArray = new NativeArray<float>(zombieList.Count, Allocator.TempJob);
             TransformAccessArray transformAccessArray = new TransformAccessArray(zombieList.Count);
@@ -64,13 +65,16 @@ public class Testing : MonoBehaviour {
             JobHandle jobHandle = reallyToughParallelJob.Schedule(zombieList.Count, 100);
             jobHandle.Complete();
             */
+
+            // 2. job system 并行计算出结构
             ReallyToughParallelJobTransforms reallyToughParallelJobTransforms = new ReallyToughParallelJobTransforms {
                 deltaTime = Time.deltaTime,
                 moveYArray = moveYArray,
             };
 
             JobHandle jobHandle = reallyToughParallelJobTransforms.Schedule(transformAccessArray);
-            jobHandle.Complete();
+            jobHandle.Complete(); // 这个应该就是会执行到 IJobParallelForTransform 接口中的 Execute 方法
+            // 并行任务执行完
 
             for (int i = 0; i < zombieList.Count; i++) {
                 //zombieList[i].transform.position = positionArray[i];
