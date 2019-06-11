@@ -12,12 +12,12 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Jobs;
-using Unity.Mathematics;
-using Unity.Jobs;
-using Unity.Collections;
-using Unity.Burst;
 
 public class Testing : MonoBehaviour {
 
@@ -36,7 +36,7 @@ public class Testing : MonoBehaviour {
             Transform zombieTransform = Instantiate(pfZombie, new Vector3(UnityEngine.Random.Range(-8f, 8f), UnityEngine.Random.Range(-5f, 5f)), Quaternion.identity);
             zombieList.Add(new Zombie {
                 transform = zombieTransform,
-                moveY = UnityEngine.Random.Range(1f, 2f)
+                    moveY = UnityEngine.Random.Range(1f, 2f)
             });
         }
     }
@@ -66,15 +66,16 @@ public class Testing : MonoBehaviour {
             jobHandle.Complete();
             */
 
-            // 2. job system 并行计算出结构
+            // 2. job system 并行计算数据复制进去,
             ReallyToughParallelJobTransforms reallyToughParallelJobTransforms = new ReallyToughParallelJobTransforms {
                 deltaTime = Time.deltaTime,
                 moveYArray = moveYArray,
             };
 
-            JobHandle jobHandle = reallyToughParallelJobTransforms.Schedule(transformAccessArray);
-            jobHandle.Complete(); // 这个应该就是会执行到 IJobParallelForTransform 接口中的 Execute 方法
-            // 并行任务执行完
+            // 3. job system 并行计算执行, 这个应该就是会执行到 IJobParallelForTransform 接口中的 Execute 方法
+            JobHandle jobHandle = reallyToughParallelJobTransforms.Schedule(transformAccessArray); // 传一个 transformAccess数组, 让并行计算的 job 中的 Execute 中可以访问但 transformAccess 属性
+            jobHandle.Complete();
+            // 4. 至此, 并行任务执行完
 
             for (int i = 0; i < zombieList.Count; i++) {
                 //zombieList[i].transform.position = positionArray[i];
@@ -170,7 +171,7 @@ public struct ReallyToughParallelJob : IJobParallelFor {
 
 [BurstCompile]
 public struct ReallyToughParallelJobTransforms : IJobParallelForTransform {
-    
+
     public NativeArray<float> moveYArray;
     [ReadOnly] public float deltaTime; // 
 
